@@ -20,9 +20,9 @@ def _printJson(output):
 # Login to nCircle API
 def _login(host, user, password):
 	try:
-        server = xmlrpclib.ServerProxy(host)
-        session = server.login(2, 0, user, password)
-        return (server, session)
+		server = xmlrpclib.ServerProxy('https://' + host + '/api2xmlrpc')
+		session = server.login(2, 0, user, password)
+		return (server, session)
 		
 	except xmlrpclib.Fault, fault:
 		print "xmlrpclib fault: %d %s" % (fault.faultCode, fault.faultString)
@@ -32,28 +32,30 @@ def _login(host, user, password):
 		sys.exit(1)
 	
 # Logout from nCircle API	
-def _logout(session):
-	#server.logout(session)
+def _logout(server, session):
+	server.logout(session)
 	
 # Get config file where values are stored in json format
 def _getConfigFile(configFile):
+	jsonStruct = {}
+
 	try:
-		f = open(configFile,"r")
+		f = open(configFile, "r")
 		data = f.readline()
-		json = json.loads(data)
-		f.close()	
-		return json
+		print data
+		jsonStruct = json.loads(data)
+		f.close()			
+	
 	except:
-		# Maybe we dont need to exit(1). If file does not exist, we will create it at the and and we will fetch results just > bulgarian constant
-		print "getConfigFile: Warning: Cannot read config file or wrong json structure!"
+		print "getConfigFile: Warning: Cannot read config file or wrong json structure!"		
+	return jsonStruct
 
 # Store config file in plain text file in json structure		
 def _putConfigFile(configFile, jsonStruct):
-	# Store the latest Audit IDs for each device profiler
+
 	try:
-		data = json.dumps(jsonStruct)
-		os.remove(configFile)
-		f = open(configFile,"w")		
+		data = json.dumps(jsonStruct)		
+		f = open(configFile,"w+")		
 		f.write(data)
 		f.close()	
 	except:
