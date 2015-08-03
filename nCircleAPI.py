@@ -4,7 +4,7 @@ import os
 import json
 
 # Get Item from the server, all attributes - no filtering
-def _getItem(server, list, item):
+def _getItem(server, session, list, item):
     if not list.get(item):
         list[item] = server.call(session, item, 'getAttributes', {})
     return list[item]
