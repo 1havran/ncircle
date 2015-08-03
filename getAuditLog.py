@@ -23,15 +23,17 @@ def _printJson(output):
 		print "\"%s\": \"%s\"," % (name, data),
 
 		
-# Read latest counter for fetching the audit records
+# Get the latest Audit IDs for each device profiler
 try:
-	f = open(counter_file,"r+")
-	latest_counter = f.readline()
-	f.close()
+	f = open(counter_file,"r")
+	data = f.readline()
+	json = json.loads(data)
+	f.close()	
 except:
-	print "Error: Cannot read counter file!"
-	print "Counter taken from default!"
-	
+	# Maybe we dont need to exit(1). If file does not exist, we will create it at the and and we will fetch results just > bulgarian constant
+	print "Error: Cannot read audit file or wrong json structure!"
+	json['maxId'] = latest_counter
+	sys.exit(1)	
 
 # Get the audit records
 try:
@@ -42,7 +44,7 @@ try:
 	# Construct query to get latest audit records
 	result = server.call(session, 'SESSION', 'getUserObject', {})
 	params = {}
-	params['query'] = "id > \'%s\'" % (latest_counter)
+	params['query'] = "id > \'%s\'" % (json['maxId'])
 		
 	newAuditRecords = server.call(session, 'class.AuditLog', 'search', params)
 	if newAuditRecords:
@@ -71,12 +73,14 @@ except xmlrpclib.ProtocolError, error:
 try:	
 	os.remove(counter_file)
 	f = open(counter_file,"w")
-	s = str(maxId)
-	f.write(s)
+	json['maxId'] = maxId
+	data = json.dumps(json)
+	f.write(data)
 	f.close()	
 except:
-	print "Error: Cannot remove or write file with latest ID for fetching audit records"
+	print "Error: Cannot write audit file or wrong json structure!"
 	sys.exit(1)
+
 	
 # exit
 sys.exit(0)
