@@ -19,8 +19,7 @@ for key in getMergedConf(config_file).keys():
 		password = getMergedConf(config_file)[key]['password']
 		
 		jsonStruct = nCircleAPI._getConfigFile(counter_file)
-		if not jsonStruct.get(host + user + "_maxId"):
-			print 'Not in JSON'
+		if not jsonStruct.get(host + user + "_maxId"):			
 			jsonStruct[host + user + "_maxId"] = latest_counter
 
 		try:
@@ -59,6 +58,6 @@ for key in getMergedConf(config_file).keys():
 		nCircleAPI._putConfigFile(counter_file, jsonStruct)
 		
 	except:
-		print "Error in config_file" + config_file
+		pass
 # exit
 sys.exit(0)
