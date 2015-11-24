@@ -18,7 +18,8 @@ my $tpamRequestNotes = "PERL_API";	# notes for password request in TPAM
 my $nCircleHost = 'https://192.168.1.2/api2xmlrpc';	# url for nCircle APIv2
 my $nCircleUser = 'ip360@ncircle.com';					# username for login to api
 my $nCirclePassword = 'password';					# password for login to api
-my $nCircleUserID = 'User.3';							# user id of username to which the password is being changed
+
+
 
 # we create new password request for the pair of $systemName and $accountName. 
     sub addPwdRequest {
@@ -88,7 +89,7 @@ print "$0: tpam: retrieve password ... " if $verbose;
 my $password = retrieve($id);
 print "done\n" if $verbose;
 
-# connect to nCircle and update the relevant username with the new password
+# connect to nCircle and update the relevant usernames with the new password
 if ($password) {	
 	# update password in nCircle
 	$client = RPC::XML::Client->new($nCircleHost);
@@ -96,9 +97,18 @@ if ($password) {
 	my $cookie = $client->simple_request('login', 2, 0,$nCircleUser, $nCirclePassword);
 	print "done\n" if $verbose;
 	
-	print "$0: ncircle: password changing for user $nCircleUserID ... " if $verbose;
-	my $result = $client->simple_request('call', $cookie, $nCircleUserID,'setPassword', {password => $password});
-	print "done\n" if $verbose;
+	print "$0: ncircle: getting all CredSMBIDs for user $tpamAccountName ... " if $verbose;
+	my $result = $client->simple_request('call', $cookie, 'class.CredSMB','search', {query => "userName = \'$tpamAccountName\'"});
+	print "done\n" if $verbose;	
+	
+	foreach (@$result) {
+		print "$0: ncircle: password changing for $tpamAccountName with CredSMB.ID: $_ ... " if $verbose;
+		$result = $client->simple_request('call', $cookie, $_,'setPassword', {password => $password});
+		print "done\n" if $verbose;
+	}	
+
+	$result = $client->simple_request('logout', $cookie);
+	print "logout done\n" if $verbose;
 	
 } else {
 	print "$0: error: failed to receive password from TPAM!\n" if $verbose;
